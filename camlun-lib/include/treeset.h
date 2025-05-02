@@ -1,0 +1,176 @@
+#ifndef TREESET_H
+#define TREESET_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include "typemethods.h"
+
+typedef enum { RED = 0, BLACK = 1 } color;
+typedef enum { LEFT = 0, RIGHT = 1} direction;
+
+typedef struct TreeSetNode {
+    void *data;
+    union {
+        struct {
+            struct TreeSetNode *left;
+            struct TreeSetNode *right;
+        };
+        struct TreeSetNode *child[2];
+    };
+    color color;
+} TreeSetNode;
+
+/**
+ * TreeSet is a data structure that implements a set using a binary search tree.
+ * It allows for efficient insertion, deletion, and search operations.
+ */
+typedef struct TreeSet {
+    TreeSetNode *root;
+    size_t size;
+    type_methods *data_methods;
+} TreeSet;
+
+/**
+ * Creates a new TreeSet instance.
+ * @param data_methods Methods for handling the data stored in the TreeSet.
+ * @return A pointer to the newly created TreeSet, or NULL on failure.
+ */
+TreeSet *treeset_create(type_methods data_methods);
+
+/**
+ * Destroys the TreeSet and frees all associated memory.
+ * @param this The TreeSet to destroy.
+ */
+void treeset_destroy(TreeSet *this);
+
+/**
+ * Finds an element in the TreeSet.
+ * @param this The TreeSet to search.
+ * @param data The data to find.
+ * @return A pointer to the found data, or NULL if not found.
+ */
+void *treeset_find(TreeSet *this, void *data);
+
+/**
+ * Checks if an element exists in the TreeSet.
+ * @param this The TreeSet to search.
+ * @param data The data to check for.
+ * @return True if the data exists, false otherwise.
+ */
+bool treeset_contains(TreeSet *this, void *data);
+
+/**
+ * Checks if the TreeSet is empty.
+ * @param this The TreeSet to check.
+ * @return True if the TreeSet is empty, false otherwise.
+ */
+bool treeset_empty(TreeSet *this);
+
+/**
+ * Gets the size of the TreeSet.
+ * @param this The TreeSet to check.
+ * @return The number of elements in the TreeSet.
+ */
+size_t treeset_size(TreeSet *this);
+
+/**
+ * Adds an element to the TreeSet.
+ * @param this The TreeSet to modify.
+ * @param data The data to add.
+ */
+void treeset_add(TreeSet *this, void *data);
+
+/**
+ * Removes an element from the TreeSet.
+ * @param this The TreeSet to modify.
+ * @param data The data to remove.
+ */
+void treeset_remove(TreeSet *this, void *data);
+
+void treeset_clear(TreeSet *this);
+
+/**
+ * Gets the minimum element in the TreeSet.
+ * @param this The TreeSet to check.
+ * @return A pointer to the minimum element, or NULL if the TreeSet is empty.
+ */
+void *treeset_minimum(TreeSet *this);
+
+/**
+ * Gets the maximum element in the TreeSet.
+ * @param this The TreeSet to check.
+ * @return A pointer to the maximum element, or NULL if the TreeSet is empty.
+ */
+void *treeset_maximum(TreeSet *this);
+
+/**
+ * Performs the union of two TreeSets.
+ * @param this The TreeSet to modify (result of the union).
+ * @param another The TreeSet to union with.
+ */
+void treeset_add_set(TreeSet *this, TreeSet *another);
+
+/**
+ * Subtracts one TreeSet from another.
+ * @param this The TreeSet to modify (result of the subtraction).
+ * @param another The TreeSet to subtract.
+ */
+void treeset_remove_set(TreeSet *this, TreeSet *another);
+
+/**
+ * Checks if one TreeSet is a subset of another.
+ * @param this The TreeSet to check against.
+ * @param another The TreeSet to check as a subset.
+ * @return True if `another` is a subset of `this`, false otherwise.
+ */
+bool treeset_subset(TreeSet *this, TreeSet *another);
+
+TreeSet *treeset_union(TreeSet *first, TreeSet *second);
+
+TreeSet *treeset_intersection(TreeSet *first, TreeSet *second);
+
+TreeSet *treeset_complement(TreeSet *first, TreeSet *second);
+
+/**
+ * Checks if two TreeSets are equal.
+ * @param this The first TreeSet.
+ * @param another The second TreeSet.
+ * @return True if the TreeSets are equal, false otherwise.
+ */
+bool treeset_equals(TreeSet *this, TreeSet *another);
+
+int treeset_compare(TreeSet *first, TreeSet *second);
+
+/**
+ * Macro for iterating over a TreeSet using Morris Inorder Traversal.
+ * @param set The TreeSet to iterate over.
+ * @param varname The variable to hold the current element's data.
+ * @param callback The block of code to execute for each element.
+ */
+#define TREESET_FOREACH(set, varname, callback)                     \
+    do {                                                            \
+        TreeSetNode *_curr = (set)->root;                         \
+        while (_curr != NULL) {                                     \
+            if (_curr->left == NULL) {                              \
+                varname = _curr->data;                              \
+                callback;                                           \
+                _curr = _curr->right;                               \
+            } else {                                                \
+                TreeSetNode *_prev = _curr->left;                      \
+                while (_prev->right != NULL && _prev->right != _curr) { \
+                    _prev = _prev->right;                           \
+                }                                                   \
+                if (_prev->right == NULL) {                         \
+                    _prev->right = _curr;                           \
+                    _curr = _curr->left;                            \
+                } else {                                            \
+                    _prev->right = NULL;                            \
+                    varname = _curr->data;                          \
+                    callback;                                       \
+                    _curr = _curr->right;                           \
+                }                                                   \
+            }                                                       \
+        }                                                           \
+    } while (0)
+
+#endif
