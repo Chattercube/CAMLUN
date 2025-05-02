@@ -3,7 +3,7 @@
 #include "typemethods.h"
 
 void print_integers(Vector *vector) {
-    printf("[ ");
+    printf("[");
     if(vector_size(vector) > 0) {
         VectorNode *node = vector_begin(vector);
         while(1) {
@@ -12,15 +12,29 @@ void print_integers(Vector *vector) {
             if (node == vector_end(vector) - 1) {
                 break;
             }
+            node++;
             printf(", ");
         }
     }
     printf("]\n");
 }
 
-static const TYPE_INT = TYPE_INI
+static const type_methods TYPE_INT = TYPE_INIT(int);
 
 int main() {
 
-    return 0;
+    Vector *vector = vector_create(&TYPE_INT);
+
+    int values[] = {1, 20, 3, 4, 5};
+    for (int i = 0; i < 5; i++) {
+        vector_push_back(vector, &values[i]);
+    }
+
+    print_integers(vector);
+
+    vector_erase(vector, 2);
+
+    print_integers(vector);
+
+    vector_destroy(vector);
 }

@@ -68,7 +68,7 @@ TreeSetNode *treeset_insert_helper(TreeSet *set, TreeSetNode *node, void *data) 
 
     bool dir = set->data_methods->cmp(data, node->data) > 0;
     node->child[dir] = treeset_insert_helper(set, node->child[dir], data);
-    node = treesetnode_insert_fix_up(node, dir);
+    return treesetnode_insert_fix_up(node, dir);
 
 }
 
@@ -192,7 +192,7 @@ void treeset_destroy_helper(TreeSet *set, TreeSetNode *node) {
 
 // end of private
 
-TreeSet *treeset_create(type_methods data_methods) {
+TreeSet *treeset_create(type_methods *data_methods) {
     TreeSet *set = malloc(sizeof(TreeSet));
     if (set == NULL) {
         return NULL;
@@ -353,6 +353,7 @@ TreeSet *treeset_intersection(TreeSet *first, TreeSet *second) {
             treeset_add(new_set, data);
         }
     });
+    return new_set;
 };
 
 TreeSet *treeset_complement(TreeSet *first, TreeSet *second) {
@@ -365,6 +366,7 @@ TreeSet *treeset_complement(TreeSet *first, TreeSet *second) {
             treeset_add(new_set, data);
         }
     });
+    return new_set;
 };
 
 // true if another ⊆ this
@@ -384,7 +386,7 @@ inline bool treeset_equals(TreeSet *this, TreeSet *another) {
     return this->size == another->size && treeset_subset(this, another);
 }
 
-TreeSet *treeset_clone(TreeSet *this, type_methods new_data_methods) {
+TreeSet *treeset_clone(TreeSet *this, type_methods *new_data_methods) {
     TreeSet *clone = treeset_create(new_data_methods);
     if (clone == NULL) {
         return NULL;

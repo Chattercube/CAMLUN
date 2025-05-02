@@ -3,6 +3,42 @@
 #include <assert.h>
 #include "hashmap.h"
 
+// ==== Method Overview ====
+
+// Private Methods :
+
+size_t hashmap_probe_next(HashMap *map, size_t index, size_t probe_count);
+bool hashmap_need_rehash(HashMap *map, size_t new_size);
+
+// Constructors and destructors :
+
+HashMap *hashmap_create(type_methods *key_methods, type_methods *value_methods);
+HashMap *hashmap_destroy(HashMap *this);
+
+// Access and iteration :
+
+HashMap *hashmap_get(HashMap *map, void *key);
+bool hashmap_contains(HashMap *map, void *key);
+
+// Capacity :
+
+bool hashmap_empty(HashMap *map);
+size_t hashmap_size(HashMap *map);
+size_t hashmap_occupied_size(HashMap *map);
+size_t hashmap_capacity(HashMap *map);
+
+void hashmap_rehash(HashMap *map, size_t new_capacity);
+
+// Modifiers :
+
+void hashmap_set(HashMap *map, void *key, void *value);
+void hashmap_reset(HashMap *map, void *key);
+void hashmap_remove(HashMap *map, void *key);
+
+// Macros
+
+// === End of Method Overview ===
+
 // Private methods
 
 size_t hashmap_probe_next(HashMap *map, size_t index, size_t probe_count) {
@@ -15,7 +51,7 @@ bool hashmap_need_rehash(HashMap *map, size_t new_size) {
 
 // End of private methods
 
-HashMap *hashmap_create(type_methods key_methods, type_methods value_methods) {
+HashMap *hashmap_create(type_methods *key_methods, type_methods *value_methods) {
     HashMap *hashmap = malloc(sizeof(HashMap));
     if (hashmap == NULL) {
         return NULL;
@@ -107,7 +143,7 @@ void hashmap_rehash(HashMap *map, size_t new_capacity) {
     free(map->nodes);
     map->nodes = new_nodes;
     map->capacity = new_capacity;
-    new->occupied_size = new_size;
+    map->occupied_size = new_size;
     map->size = new_size;
     return;
 }

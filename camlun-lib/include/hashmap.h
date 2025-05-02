@@ -1,10 +1,24 @@
+#ifndef HASHMAP_H
+#define HASHMAP_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include "typemethods.h"
 
+/**
+ * Constants
+ */
+
 #define HASHMAP_NODE_FREE 0x00
 #define HASHMAP_NODE_FILLED 0xFF
 #define HASHMAP_NODE_DELETED 0x01
+
+static const size_t HASHMAP_INITIAL_CAPACITY = 64;
+static const double HASHMAP_LOAD_FACTOR = 0.75;
+
+/**
+ * Type Structures
+ */
 
 typedef struct HashMapNode {
     void *key;
@@ -21,9 +35,44 @@ typedef struct HashMap {
     type_methods *value_methods;
 } HashMap;
 
-static const size_t HASHMAP_INITIAL_CAPACITY = 64;
 
-static const double HASHMAP_LOAD_FACTOR = 0.75;
+// ==== Method Overview ====
+
+// Private Methods :
+
+size_t hashmap_probe_next(HashMap *map, size_t index, size_t probe_count);
+bool hashmap_need_rehash(HashMap *map, size_t new_size);
+
+// Constructors and destructors :
+
+HashMap *hashmap_create(type_methods *key_methods, type_methods *value_methods);
+HashMap *hashmap_destroy(HashMap *this);
+
+// Access and iteration :
+
+HashMap *hashmap_get(HashMap *map, void *key);
+bool hashmap_contains(HashMap *map, void *key);
+
+// Capacity :
+
+bool hashmap_empty(HashMap *map);
+size_t hashmap_size(HashMap *map);
+size_t hashmap_occupied_size(HashMap *map);
+size_t hashmap_capacity(HashMap *map);
+
+void hashmap_rehash(HashMap *map, size_t new_capacity);
+
+// Modifiers :
+
+void hashmap_set(HashMap *map, void *key, void *value);
+void hashmap_reset(HashMap *map, void *key);
+void hashmap_remove(HashMap *map, void *key);
+
+// ==== End of Method Overview ====
+
+
+
+// ==== Macros ====
 
 #define HASHMAP_KEYS_FOREACH(map, varname, callback) \
     do {                                                            \
@@ -55,3 +104,9 @@ static const double HASHMAP_LOAD_FACTOR = 0.75;
             }                                                       \
         }                                                           \
     } while (0)
+
+// ==== End of Macros ====
+
+
+
+#endif

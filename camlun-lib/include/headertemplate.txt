@@ -1,0 +1,54 @@
+#ifndef HEADERTEMPLATE_H
+#define HEADERTEMPLATE_H
+
+// ==== Includes ====
+
+#include <stdbool.h>
+
+// ==== End of Includes ====
+
+
+
+// ==== Constants ====
+
+#define MACRO_CONSTANT 69
+#define MACRO_CONSTANT_2 420
+
+static const int STATIC_CONSTANT = 64;
+
+// ==== End of Constants ====
+
+
+
+// ==== Type Definitions ====
+
+typedef float datatype_definition;
+
+typedef struct struct_definition {
+    void *data_property;
+    int int_property;
+} struct_definition;
+
+// ==== End of Type Definitions ====
+
+
+
+// ==== Method Overview ====
+
+// Private methods :
+
+// Constructors and destructors :
+
+// Access and iteration :
+
+// Size and capacity :
+
+// Modifiers :
+
+// Copy constructors or creators :
+
+// === End of Method Overview ====
+
+
+#endif
+

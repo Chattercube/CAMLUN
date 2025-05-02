@@ -1,13 +1,68 @@
 
 #include "vector.h"
-
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
 #include "typemethods.h"
 
-// Private methods
+// ==== Method Overview ====
+
+// Private Methods :
+
+size_t get_new_capacity(size_t target_capacity);
+void vector_node_init(Vector *vector, VectorNode *node, void *data);
+
+// Constructors and destructors :
+
+Vector *vector_create(type_methods *data_methods);
+void vector_destroy(Vector *this);
+
+// Access and iteration :
+
+void *vector_get(Vector *this, size_t pos);
+void *vector_first(Vector *this);
+void *vector_last(Vector *this);
+
+VectorNode *vector_at(Vector *this, size_t pos);
+VectorNode *vector_begin(Vector *this);
+VectorNode *vector_end(Vector *this);
+void vector_increment(VectorNode **this);
+size_t vector_pos(Vector *this, VectorNode *node);
+
+// Capacity :
+
+bool vector_empty(Vector *this);
+size_t vector_size(Vector *this);
+size_t vector_capacity(Vector *this);
+
+void vector_reserve(Vector *this, size_t new_capacity);
+void vector_compact(Vector *this);
+
+// Modifiers :
+
+void vector_set(Vector *this, size_t pos, void *data);
+void vector_insert(Vector *this, size_t pos, void *data);
+void vector_erase(Vector *this, size_t pos);
+void vector_push_back(Vector *this, void *data);
+void vector_pop_back(Vector *this);
+
+VectorNode *vector_insert_at(Vector *this, VectorNode *node, void *data);
+VectorNode *vector_erase_at(Vector *this, VectorNode *node);
+void vector_replace(Vector *this, VectorNode *node, void *data);
+
+void vector_truncate(Vector *this, size_t new_size);
+void vector_expand(Vector *this, size_t new_size);
+void vector_resize(Vector *this, size_t new_size);
+void vector_clear(Vector *this);
+
+// Copy constructors or creators :
+
+Vector *vector_clone(Vector *this, type_methods *new_data_methods);
+Vector vector_slice(Vector *this, size_t offset, size_t count);
+
+// === End of Method Overview ===
+
 
 size_t get_new_capacity(size_t target_capacity) {
     size_t new_capacity = VECTOR_INITIAL_CAPACITY;
@@ -28,7 +83,7 @@ void vector_node_init(Vector *vector, VectorNode *node, void *data) {
 
 // End of private methods
 
-Vector *vector_create(type_methods data_methods) {
+Vector *vector_create(type_methods *data_methods) {
     Vector *vector = malloc(sizeof(Vector));
     if (vector == NULL) {
         return NULL;
@@ -52,17 +107,17 @@ void vector_destroy(Vector *this) {
 }
 
 void *vector_get(Vector *this, size_t pos) {
-    return this->data_methods->dup(*(void *)vector_at(this, pos));
+    return this->data_methods->dup(*(void **)vector_at(this, pos));
 }
 
 void *vector_first(Vector *this) {
     if (vector_empty(this)) return NULL;
-    return this->data_methods->dup(*(void *)vector_begin(this));
+    return this->data_methods->dup(*(void **)vector_begin(this));
 }
 
 void *vector_last(Vector *this) {
     if (vector_empty(this)) return NULL;
-    return this->data_methods->dup(*(void *)(vector_end(this) - 1));
+    return this->data_methods->dup(*(void **)(vector_end(this) - 1));
 }
 
 VectorNode *vector_at(Vector *this, size_t pos) {
@@ -104,7 +159,7 @@ void vector_reserve(Vector *this, size_t new_capacity) {
     new_capacity = get_new_capacity(new_capacity);
 
     if (new_capacity <= this->capacity) {
-        return this;
+        return;
     }
 
     VectorNode *new_nodes = realloc(this->nodes, new_capacity * sizeof(VectorNode));
@@ -150,6 +205,7 @@ void vector_insert(Vector *this, size_t pos, void *data) {
 
     this->nodes[pos] = NULL;
     vector_node_init(this, this->nodes + pos, data);
+    this->size++;
 }
 
 void vector_erase(Vector *this, size_t pos) {
@@ -194,9 +250,63 @@ void vector_push_back(Vector *this, void *data) {
     this->size++;
 }
 
-void vector_pop_back(Vector *this, void *data) {
+void vector_pop_back(Vector *this) {
     assert(this->size > 0);
     this->size--;
     this->data_methods->del(this->nodes[this->size]);
     this->nodes[this->size] = NULL;
+}
+
+void vector_truncate(Vector *this, size_t new_size) {
+    for (size_t i = new_size; i < this->size; i++) {
+        this->data_methods->del(this->nodes[i]);
+    }
+    this->size = new_size;
+}
+
+void vector_expand(Vector *this, size_t new_size) {
+    if (new_size > this->capacity) {
+        vector_reserve(this, new_size);
+    }
+    for (size_t i = this->size; i < new_size; i++) {
+        this->nodes[i] = this->data_methods->crt();
+    }
+    this->size = new_size;
+}
+
+void vector_resize(Vector *this, size_t new_size) {
+    if(this->size < new_size) {
+        vector_expand(this, new_size);
+    } else {
+        vector_truncate(this, new_size);
+    }
+}
+
+void vector_clear(Vector *this) {
+    for (size_t i = 0; i < this->size; i++) {
+        this->data_methods->del(this->nodes[i]);
+    }
+    this->size = 0;
+}
+
+Vector *vector_clone(Vector *this, type_methods *new_data_methods) {
+    Vector *clone = vector_create(new_data_methods);
+    if (clone == NULL) {
+        return NULL;
+    }
+    vector_reserve(clone, this->size);
+    for (size_t i = 0; i < this->size; i++) {
+        clone->nodes[i] = this->data_methods->dup(this->nodes[i]);
+    }
+    clone->size = this->size;
+    return clone;
+}
+
+Vector vector_slice(Vector *this, size_t offset, size_t count) {
+    Vector slice;
+    slice.data_methods = this->data_methods;
+    slice.nodes = this->nodes + offset;
+    slice.size = count;
+    slice.capacity = count;
+    return slice;
 }

@@ -1,8 +1,8 @@
-#pragma once
 #include "typemethods.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 
 //-----------------------------------------------------------------------------
 // MurmurHash3 was written by Austin Appleby, and is placed in the public
@@ -12,8 +12,6 @@
 // algorithms are optimized for their respective platforms. You can still
 // compile and run any of them on any platform, but your performance with the
 // non-native version will be less than optimal.
-
-#include "murmur3.h"
 
 //-----------------------------------------------------------------------------
 // Platform-specific functions and macros
@@ -421,7 +419,7 @@ int numerical_unsigned_comparator(size_t type_size, void *first, void *second) {
     if (!first && !second) return 0;
     if (!first) return -1;
     if (!second) return 1;
-    return memcmp(first, second, type_size)
+    return memcmp(first, second, type_size);
 }
 
 int numerical_signed_comparator(size_t type_size, void *first, void *second) {
@@ -447,9 +445,9 @@ int numerical_signed_comparator(size_t type_size, void *first, void *second) {
                                                                                  : 0)
 
 size_t numerical_hash_function(size_t type_size, void *ptr) {
-    char hash_str[128];
-    MurmurHash3_x64_128(ptr, type_size, HASH_SEED, hash_str);
-    return *(size_t *)(hash_str + (128 - sizeof(size_t)));
+    uint64_t hash_output[2];
+    MurmurHash3_x64_128(ptr, type_size, HASH_SEED, hash_output);
+    return (size_t)(hash_output[0] ^ hash_output[1]);
 }
 
 void *shallow_default_constructor() {
@@ -501,9 +499,9 @@ int string_comparator(void *first, void *second) {
 }
 
 size_t string_hash_function(void *ptr) {
-    char hash_str[128];
-    MurmurHash3_x64_128(ptr, strlen((char *)ptr), HASH_SEED, hash_str);
-    return *(size_t *)(hash_str + (128 - sizeof(size_t)));
+    uint64_t hash_output[2];
+    MurmurHash3_x64_128(ptr, strlen((char*)ptr), HASH_SEED, hash_output);
+    return (size_t)(hash_output[0] ^ hash_output[1]);
 }
 
 void *bool_default_constructor() { return numerical_default_constructor(sizeof(bool)); }
@@ -686,14 +684,6 @@ void *ptrdiff_t_copy_constructor(void *ptr) {
     return numerical_copy_constructor(sizeof(ptrdiff_t), ptr);
 }
 
-void *string_copy_constructor(void *ptr) {
-    return string_copy_constructor(ptr);
-}
-
-void *shallow_copy_constructor(void *ptr) {
-    return shallow_copy_constructor(ptr);
-}
-
 int bool_comparator(void *first, void *second) {
     return NUMERICAL_VALUE_COMPARATOR(bool, first, second);
 }
@@ -808,14 +798,6 @@ int size_t_comparator(void *first, void *second) {
 
 int ptrdiff_t_comparator(void *first, void *second) {
     return NUMERICAL_VALUE_COMPARATOR(ptrdiff_t, first, second);
-}
-
-int string_comparator(void *first, void *second) {
-    return string_comparator(first, second);
-}
-
-int shallow_comparator(void *first, void *second) {
-    return shallow_comparator(first, second);
 }
 
 size_t bool_hash_function(void *ptr) {
