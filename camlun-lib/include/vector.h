@@ -105,7 +105,7 @@ Vector vector_slice(Vector *this, size_t offset, size_t count);
                 fprintf(stream, ", ");                 \
             }                                          \
         }                                              \
-        printf("]\n");                                 \
+        printf("]");                                 \
     } while (0)
 
 #define VECTOR_SPRINTF(buffer, vector, varname, ...)           \
@@ -141,7 +141,7 @@ Vector vector_slice(Vector *this, size_t offset, size_t count);
                 printf(", ");                          \
             }                                          \
         }                                              \
-        printf("]\n");                                 \
+        printf("]");                                 \
     } while (0)
 
 // === End of Macros ====

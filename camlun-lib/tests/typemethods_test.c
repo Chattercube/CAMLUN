@@ -1,8 +1,8 @@
 #include "typemethods.h"
 #include <stdio.h>
 
-const static type_methods TYPE_DOUBLE = TYPE_INIT(double);
-const static type_methods TYPE_STRING = TYPE_INIT(string);
+const static type_methods TYPE_DOUBLE = TYPE_METHODS(double);
+const static type_methods TYPE_STRING = TYPE_METHODS(string);
 
 int main() {
     double my_double[] = {1.0, 2.0, 3.0, 923.21, 2};

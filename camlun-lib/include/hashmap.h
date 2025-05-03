@@ -1,8 +1,10 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
 
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "typemethods.h"
 
 /**
@@ -34,7 +36,6 @@ typedef struct HashMap {
     type_methods *key_methods;
     type_methods *value_methods;
 } HashMap;
-
 
 // ==== Method Overview ====
 
@@ -77,43 +78,80 @@ HashMap *hashmap_clone(HashMap *this, type_methods *new_data_methods);
 
 // ==== End of Method Overview ====
 
-
-
 // ==== Macros ====
 
-#define HASHMAP_KEYS_FOREACH(map, varname, callback) \
-    do {                                                            \
-        for (size_t _i = 0; _i < map->capacity; _i++) {             \
-            if (map->nodes[i].status == HASHMAP_NODE_FILLED) {      \
-                varname = map->nodes[i].key;                        \
-                callback;                                           \
-            }                                                       \
-        }                                                           \
+#define HASHMAP_KEYS_FOREACH(map, varname, callback)           \
+    do {                                                       \
+        for (size_t _i = 0; _i < map->capacity; _i++) {        \
+            if (map->nodes[_i].status == HASHMAP_NODE_FILLED) { \
+                varname = map->nodes[_i].key;                   \
+                callback;                                      \
+            }                                                  \
+        }                                                      \
     } while (0)
 
-#define HASHMAP_VALUES_FOREACH(map, varname, callback) \
-    do {                                                            \
-        for (size_t _i = 0; _i < map->capacity; _i++) {             \
-            if (map->nodes[i].status == HASHMAP_NODE_FILLED) {      \
-                varname = map->nodes[i].value;                      \
-                callback;                                           \
-            }                                                       \
-        }                                                           \
+#define HASHMAP_VALUES_FOREACH(map, varname, callback)         \
+    do {                                                       \
+        for (size_t _i = 0; _i < map->capacity; _i++) {        \
+            if (map->nodes[_i].status == HASHMAP_NODE_FILLED) { \
+                varname = map->nodes[_i].value;                 \
+                callback;                                      \
+            }                                                  \
+        }                                                      \
     } while (0)
 
 #define HASHMAP_PAIRS_FOREACH(map, keyname, valuename, callback) \
-    do {                                                            \
-        for (size_t _i = 0; _i < map->capacity; _i++) {             \
-            if (map->nodes[i].status == HASHMAP_NODE_FILLED) {      \
-                keyname = map->nodes[i].key;                        \
-                valuename = map->nodes[i].value;                    \
-                callback;                                           \
-            }                                                       \
-        }                                                           \
+    do {                                                         \
+        for (size_t _i = 0; _i < map->capacity; _i++) {          \
+            if (map->nodes[_i].status == HASHMAP_NODE_FILLED) {   \
+                keyname = map->nodes[_i].key;                     \
+                valuename = map->nodes[_i].value;                 \
+                callback;                                        \
+            }                                                    \
+        }                                                        \
     } while (0)
 
+#define HASHMAP_PRINTF(map, keyname, valuename, ...)     \
+    do {                                                 \
+        printf("{");                                     \
+        size_t _counter = 0;                             \
+        HASHMAP_PAIRS_FOREACH(map, keyname, valuename, { \
+            _counter++;                                  \
+            printf(__VA_ARGS__);                         \
+            if (_counter < hashmap_size(map)) {          \
+                printf(", ");                            \
+            }                                            \
+        });                                              \
+        printf("}");                                     \
+    } while (0)
+
+#define HASHMAP_FPRINTF(stream, map, keyname, valuename, ...) \
+    do {                                                      \
+        fprintf(stream, "{");                                 \
+        size_t _counter = 0;                                  \
+        HASHMAP_PAIRS_FOREACH(map, keyname, valuename, {      \
+            _counter++;                                       \
+            fprintf(stream, __VA_ARGS__);                     \
+            if (_counter < hashmap_size(map)) {               \
+                fprintf(stream, ", ");                        \
+            }                                                 \
+        });                                                   \
+        fprintf(stream, "}");                                 \
+    } while (0)
+
+#define HASHMAP_SPRINTF(buffer, map, keyname, valuename, ...) \
+    do {                                                      \
+        sprintf(buffer, "{");                                 \
+        size_t _counter = 0;                                  \
+        HASHMAP_PAIRS_FOREACH(map, keyname, valuename, {      \
+            _counter++;                                       \
+            sprintf(buffer + strlen(buffer), __VA_ARGS__);    \
+            if (_counter < hashmap_size(map)) {               \
+                sprintf(buffer + strlen(buffer), ", ");       \
+            }                                                 \
+        });                                                   \
+        sprintf(buffer + strlen(buffer), "}");                \
+    } while (0)
 // ==== End of Macros ====
-
-
 
 #endif

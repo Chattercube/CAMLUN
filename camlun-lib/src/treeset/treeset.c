@@ -18,7 +18,7 @@ TreeSetNode *treesetnode_create(void *data, color color) {
     return node;
 }
 
-bool treesetnode_red(TreeSetNode *node) {
+static bool treesetnode_red(TreeSetNode *node) {
     return node == NULL ? false : node->color == RED;
 }
 

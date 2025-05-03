@@ -177,6 +177,30 @@ size_t hashmap_capacity(HashMap *map) {
     return map->capacity;
 }
 
+void hashmap_add(HashMap *map, void *key) {
+    if (hashmap_need_rehash(map, map->occupied_size + 1)) {
+        hashmap_rehash(map, map->capacity * 2);
+    }
+
+    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t probe_count = 0;
+    while (map->nodes[index].status != HASHMAP_NODE_FREE) {
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
+            return; // Key already exists
+        }
+        probe_count++;
+        index = hashmap_probe_next(map, index, probe_count);
+    }
+
+    if(map->nodes[index].status == HASHMAP_NODE_FREE) {
+        map->occupied_size++;
+    }
+    map->nodes[index].key = map->key_methods->dup(key);
+    map->nodes[index].value = map->value_methods->crt();
+    map->nodes[index].status = HASHMAP_NODE_FILLED;
+    map->size++;
+}
+
 void hashmap_set(HashMap *map, void *key, void *value) {
     if (hashmap_need_rehash(map, map->occupied_size + 1)) {
         hashmap_rehash(map, map->capacity * 2);

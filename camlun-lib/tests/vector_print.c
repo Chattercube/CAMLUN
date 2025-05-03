@@ -20,7 +20,7 @@ void print_integers(Vector *vector) {
     printf("]\n");
 }
 
-static const type_methods TYPE_INT = TYPE_INIT(int);
+TYPE_INIT(static type_methods TYPE_INT, int);
 
 int main() {
     Vector *vector = vector_create(&TYPE_INT);

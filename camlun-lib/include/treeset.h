@@ -5,20 +5,19 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+
 #include "typemethods.h"
 
 // ==== End of Includes ====
 
-
-
 // ==== Constants ====
 
-typedef enum { RED = 0, BLACK = 1 } color;
-typedef enum { LEFT = 0, RIGHT = 1} direction;
+typedef enum { RED = 0,
+               BLACK = 1 } color;
+typedef enum { LEFT = 0,
+               RIGHT = 1 } direction;
 
 // ==== End of Constants ====
-
-
 
 // ==== Type Definitions ====
 
@@ -41,8 +40,6 @@ typedef struct TreeSet {
 } TreeSet;
 
 // ==== End of Type Definitions ====
-
-
 
 // ==== Method Overview ====
 
@@ -96,35 +93,73 @@ TreeSet *treeset_clone(TreeSet *this, type_methods *new_data_methods);
 
 // ==== Macros ====
 
-#define TREESET_FOREACH(set, varname, callback)                     \
-    do {                                                            \
-        TreeSetNode *_curr = (set)->root;                         \
-        while (_curr != NULL) {                                     \
-            if (_curr->left == NULL) {                              \
-                varname = _curr->data;                              \
-                callback;                                           \
-                _curr = _curr->right;                               \
-            } else {                                                \
-                TreeSetNode *_prev = _curr->left;                      \
+#define TREESET_FOREACH(set, varname, callback)                         \
+    do {                                                                \
+        TreeSetNode *_curr = (set)->root;                               \
+        while (_curr != NULL) {                                         \
+            if (_curr->left == NULL) {                                  \
+                varname = _curr->data;                                  \
+                callback;                                               \
+                _curr = _curr->right;                                   \
+            } else {                                                    \
+                TreeSetNode *_prev = _curr->left;                       \
                 while (_prev->right != NULL && _prev->right != _curr) { \
-                    _prev = _prev->right;                           \
-                }                                                   \
-                if (_prev->right == NULL) {                         \
-                    _prev->right = _curr;                           \
-                    _curr = _curr->left;                            \
-                } else {                                            \
-                    _prev->right = NULL;                            \
-                    varname = _curr->data;                          \
-                    callback;                                       \
-                    _curr = _curr->right;                           \
-                }                                                   \
-            }                                                       \
-        }                                                           \
+                    _prev = _prev->right;                               \
+                }                                                       \
+                if (_prev->right == NULL) {                             \
+                    _prev->right = _curr;                               \
+                    _curr = _curr->left;                                \
+                } else {                                                \
+                    _prev->right = NULL;                                \
+                    varname = _curr->data;                              \
+                    callback;                                           \
+                    _curr = _curr->right;                               \
+                }                                                       \
+            }                                                           \
+        }                                                               \
     } while (0)
 
+#define TREESET_PRINTF(set, varname, ...)       \
+    do {                                        \
+        printf("{");                            \
+        size_t _counter = 0;                    \
+        TREESET_FOREACH(set, varname, {         \
+            _counter++;                         \
+            printf(__VA_ARGS__);                \
+            if (_counter < treeset_size(set)) { \
+                printf(", ");                   \
+            }                                   \
+        });                                     \
+        printf("}");                            \
+    } while (0)
+
+#define TREESET_FPRINTF(stream, set, varname, ...) \
+    do {                                           \
+        fprintf(stream, "{");                      \
+        size_t _counter = 0;                       \
+        TREESET_FOREACH(set, varname, {            \
+            _counter++;                            \
+            fprintf(stream, __VA_ARGS__);          \
+            if (_counter < treeset_size(set)) {    \
+                fprintf(stream, ", ");             \
+            }                                      \
+        });                                        \
+        fprintf(stream, "}");                      \
+    } while (0)
+
+#define TREESET_SPRINTF(buffer, set, varname, ...)         \
+    do {                                                   \
+        sprintf(buffer, "{");                              \
+        size_t _counter = 0;                               \
+        TREESET_FOREACH(set, varname, {                    \
+            _counter++;                                    \
+            sprintf(buffer + strlen(buffer), __VA_ARGS__); \
+            if (_counter < treeset_size(set)) {            \
+                sprintf(buffer + strlen(buffer), ", ");    \
+            }                                              \
+        });                                                \
+        sprintf(buffer + strlen(buffer), "}");             \
+    } while (0)
 // === End of Macros ====
 
-
-
 #endif
-
