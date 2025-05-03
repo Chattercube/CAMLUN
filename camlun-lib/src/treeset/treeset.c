@@ -214,23 +214,6 @@ void treeset_destroy(TreeSet *this) {
     return;
 }
 
-void *treeset_find(TreeSet *this, void *data) {
-    TreeSetNode *current_node = this->root;
-    while (current_node != NULL) {
-        switch (this->data_methods->cmp(current_node->data, data)) {
-            case 0:
-                return current_node->data;
-            case 1:
-                current_node = current_node->child[RIGHT];
-                break;
-            default:
-                current_node = current_node->child[LEFT];
-                break;
-        }
-    }
-    return NULL;
-}
-
 void *treeset_minimum(TreeSet *this) {
     if (this->root == NULL) {
         return NULL;
@@ -239,7 +222,7 @@ void *treeset_minimum(TreeSet *this) {
     while (current_node->left != NULL) {
         current_node = current_node->child[LEFT];
     }
-    return current_node->data;
+    return this->data_methods->dup(current_node->data);
 }
 
 void *treeset_maximum(TreeSet *this) {
@@ -250,7 +233,7 @@ void *treeset_maximum(TreeSet *this) {
     while (current_node->right != NULL) {
         current_node = current_node->child[RIGHT];
     }
-    return current_node->data;
+    return this->data_methods->dup(current_node->data);
 }
 
 bool treeset_contains(TreeSet *this, void *data) {
@@ -268,6 +251,23 @@ bool treeset_contains(TreeSet *this, void *data) {
         }
     }
     return false;
+}
+
+TreeSetNode *treeset_find(TreeSet *this, void *data) {
+    TreeSetNode *current_node = this->root;
+    while (current_node != NULL) {
+        switch (this->data_methods->cmp(current_node->data, data)) {
+            case 0:
+                return current_node;
+            case 1:
+                current_node = current_node->child[LEFT];
+                break;
+            default:
+                current_node = current_node->child[RIGHT];
+                break;
+        }
+    }
+    return NULL;
 }
 
 inline bool treeset_empty(TreeSet *this) {
@@ -308,83 +308,7 @@ void treeset_clear(TreeSet *this) {
     return;
 }
 
-// this = this ∪ another
-void treeset_add_set(TreeSet *this, TreeSet *another) {
 
-    TREESET_FOREACH(another, void *data, {
-        treeset_add(this, data);
-    });
-    return;
-}
-
-
-// this = this \ another
-void treeset_remove_set(TreeSet *this, TreeSet *another) {
-
-    TREESET_FOREACH(another, void *data, {
-        treeset_remove(this, data);
-    });
-    return;
-}
-
-TreeSet *treeset_union(TreeSet *first, TreeSet *second) {
-    TreeSet *new_set = treeset_create(first->data_methods);
-    if (new_set == NULL) {
-        return NULL;
-    }
-    TREESET_FOREACH(first, void *data, {
-        treeset_add(new_set, data);
-    });
-    TREESET_FOREACH(second, void *data, {
-        treeset_add(new_set, data);
-    });
-    return new_set;
-};
-
-TreeSet *treeset_intersection(TreeSet *first, TreeSet *second) {
-    TreeSet *new_set = treeset_create(first->data_methods);
-    if (new_set == NULL) {
-        return NULL;
-    }
-    TreeSet *smaller_set = first->size < second->size ? first : second;
-    TreeSet *larger_set = first->size < second->size ? second : first;
-    TREESET_FOREACH(smaller_set, void *data, {
-        if(treeset_contains(larger_set, data)) {
-            treeset_add(new_set, data);
-        }
-    });
-    return new_set;
-};
-
-TreeSet *treeset_complement(TreeSet *first, TreeSet *second) {
-    TreeSet *new_set = treeset_create(first->data_methods);
-    if (new_set == NULL) {
-        return NULL;
-    }
-    TREESET_FOREACH(first, void *data, {
-        if(!treeset_contains(second, data)) {
-            treeset_add(new_set, data);
-        }
-    });
-    return new_set;
-};
-
-// true if another ⊆ this
-bool treeset_subset(TreeSet *this, TreeSet *another) {
-    if (this->size > another->size) {
-        return false;
-    }
-    TREESET_FOREACH(another, void *data, {
-        if(!treeset_contains(this, data)) {
-            return false;
-        }
-    });
-    return true;
-}
-
-inline bool treeset_equals(TreeSet *this, TreeSet *another) {
-    return this->size == another->size && treeset_subset(this, another);
-}
 
 TreeSet *treeset_clone(TreeSet *this, type_methods *new_data_methods) {
     TreeSet *clone = treeset_create(new_data_methods);

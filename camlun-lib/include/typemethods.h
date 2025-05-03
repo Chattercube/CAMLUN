@@ -1,7 +1,7 @@
 #pragma once
 #include <stdbool.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 /**
@@ -243,11 +243,20 @@ size_t shallow_hash_function(void *ptr);
 /**
  * @brief Macro to initialize a type_methods structure for a given type.
  */
-#define TYPE_INIT(type) \
-    (type_methods) {    \
+#define TYPE_INIT(type)                    \
+    (type_methods) {                       \
         .crt = type##_default_constructor, \
-        .del = type##_destructor,         \
-        .dup = type##_copy_constructor,   \
-        .cmp = type##_comparator,         \
-        .hash = type##_hash_function      \
+        .del = type##_destructor,          \
+        .dup = type##_copy_constructor,    \
+        .cmp = type##_comparator,          \
+        .hash = type##_hash_function       \
     }
+
+#define TYPE_INIT_CMP_OVERRIDE(varname, base_type, custom_id, comparison_code)     \
+    static int _##base_type##_##custom_id##_comparator(void *first, void *second){ \
+        comparison_code} varname = {                                               \
+        .crt = base_type##_default_constructor,                                    \
+        .del = base_type##_destructor,                                             \
+        .dup = base_type##_copy_constructor,                                       \
+        .cmp = _##base_type##_##custom_id##_comparator,                            \
+        .hash = base_type##_hash_function};

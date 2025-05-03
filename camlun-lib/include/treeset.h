@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "typemethods.h"
 
 // ==== End of Includes ====
 
@@ -69,12 +70,12 @@ void treeset_destroy(TreeSet *this);
 
 // Access and iteration :
 
-void *treeset_find(TreeSet *this, void *data);
 void *treeset_minimum(TreeSet *this);
 void *treeset_maximum(TreeSet *this);
 
 bool treeset_contains(TreeSet *this, void *data);
-bool treeset_subset(TreeSet *this, TreeSet *another);
+
+TreeSetNode *treeset_find(TreeSet *this, void *data);
 
 // Size and capacity :
 
@@ -87,16 +88,9 @@ void treeset_add(TreeSet *this, void *data);
 void treeset_remove(TreeSet *this, void *data);
 void treeset_clear(TreeSet *this);
 
-void treeset_add_set(TreeSet *this, TreeSet *another);
-void treeset_remove_set(TreeSet *this, TreeSet *another);
-
 // Copy constructors or creators :
 
 TreeSet *treeset_clone(TreeSet *this, type_methods *new_data_methods);
-TreeSet *treeset_union(TreeSet *first, TreeSet *second);
-TreeSet *treeset_intersection(TreeSet *first, TreeSet *second);
-TreeSet *treeset_complement(TreeSet *first, TreeSet *second);
-
 
 // === End of Method Overview ====
 

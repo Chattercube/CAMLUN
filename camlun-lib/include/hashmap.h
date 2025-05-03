@@ -40,8 +40,8 @@ typedef struct HashMap {
 
 // Private Methods :
 
-size_t hashmap_probe_next(HashMap *map, size_t index, size_t probe_count);
-bool hashmap_need_rehash(HashMap *map, size_t new_size);
+// size_t hashmap_probe_next(HashMap *map, size_t index, size_t probe_count);
+// bool hashmap_need_rehash(HashMap *map, size_t new_size);
 
 // Constructors and destructors :
 
@@ -50,8 +50,10 @@ HashMap *hashmap_destroy(HashMap *this);
 
 // Access and iteration :
 
-HashMap *hashmap_get(HashMap *map, void *key);
+void *hashmap_get(HashMap *map, void *key);
 bool hashmap_contains(HashMap *map, void *key);
+
+HashMapNode *hashmap_find(HashMap *map, void *key);
 
 // Capacity :
 
@@ -64,9 +66,14 @@ void hashmap_rehash(HashMap *map, size_t new_capacity);
 
 // Modifiers :
 
+void hashmap_add(HashMap *map, void *key);
 void hashmap_set(HashMap *map, void *key, void *value);
 void hashmap_reset(HashMap *map, void *key);
 void hashmap_remove(HashMap *map, void *key);
+
+// Copy constructors and creators :
+
+HashMap *hashmap_clone(HashMap *this, type_methods *new_data_methods);
 
 // ==== End of Method Overview ====
 

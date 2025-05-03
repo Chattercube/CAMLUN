@@ -17,7 +17,7 @@ HashMap *hashmap_destroy(HashMap *this);
 
 // Access and iteration :
 
-HashMap *hashmap_get(HashMap *map, void *key);
+void *hashmap_get(HashMap *map, void *key);
 bool hashmap_contains(HashMap *map, void *key);
 
 // Capacity :
@@ -85,7 +85,7 @@ HashMap *hashmap_destroy(HashMap *map) {
     return NULL;
 }
 
-HashMap *hashmap_get(HashMap *map, void *key) {
+void *hashmap_get(HashMap *map, void *key) {
     size_t index = map->key_methods->hash(key) % map->capacity;
     size_t probe_count = 0;
     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
@@ -109,6 +109,19 @@ bool hashmap_contains(HashMap *map, void *key) {
         index = hashmap_probe_next(map, index, probe_count);
     }
     return false;
+}
+
+HashMapNode *hashmap_find(HashMap *map, void *key) {
+    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t probe_count = 0;
+    while (map->nodes[index].status != HASHMAP_NODE_FREE) {
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
+            return map->nodes + index;
+        }
+        probe_count++;
+        index = hashmap_probe_next(map, index, probe_count);
+    }
+    return NULL;
 }
 
 void hashmap_rehash(HashMap *map, size_t new_capacity) {

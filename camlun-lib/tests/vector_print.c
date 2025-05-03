@@ -1,12 +1,13 @@
 #include <stdio.h>
-#include "vector.h"
+
 #include "typemethods.h"
+#include "vector.h"
 
 void print_integers(Vector *vector) {
     printf("[");
-    if(vector_size(vector) > 0) {
+    if (vector_size(vector) > 0) {
         VectorNode *node = vector_begin(vector);
-        while(1) {
+        while (1) {
             int *data = *node;
             printf("%d", *data);
             if (node == vector_end(vector) - 1) {
@@ -22,7 +23,6 @@ void print_integers(Vector *vector) {
 static const type_methods TYPE_INT = TYPE_INIT(int);
 
 int main() {
-
     Vector *vector = vector_create(&TYPE_INT);
 
     int values[] = {1, 20, 3, 4, 5};
@@ -37,4 +37,21 @@ int main() {
     print_integers(vector);
 
     vector_destroy(vector);
+
+    do {
+        printf("[");
+        if (vector_size(vector) > 0) {
+            VectorNode *node = vector_begin(vector);
+            while (1) {
+                int *data = *node;
+                printf("%d", *data);
+                if (node == vector_end(vector) - 1) {
+                    break;
+                }
+                node++;
+                printf(", ");
+            }
+        }
+        printf("]\n");
+    } while (0);
 }

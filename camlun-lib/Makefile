@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -Wimplicit-fallthrough=1
+CFLAGS = -Wall -Wextra -Iinclude -Wimplicit-fallthrough=3
 LDFLAGS = -Llib
 LIBS = -lcamlun
 

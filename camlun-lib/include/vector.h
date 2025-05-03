@@ -4,12 +4,12 @@
 // ==== Includes ====
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+
 #include "typemethods.h"
 
 // ==== End of Includes ====
-
-
 
 // ==== Constants ====
 
@@ -18,24 +18,18 @@
 
 // ==== End of Constants ====
 
-
-
-
 // ==== Type Definitions ====
 
 typedef void *VectorNode;
 
 typedef struct {
-    VectorNode *nodes;          // Array of nodes
-    size_t size;                // Current number of elements
-    size_t capacity;            // Current capacity of the vector
-    type_methods *data_methods; // Methods for managing the data type
+    VectorNode *nodes;           // Array of nodes
+    size_t size;                 // Current number of elements
+    size_t capacity;             // Current capacity of the vector
+    type_methods *data_methods;  // Methods for managing the data type
 } Vector;
 
 // ==== End of Type Definitions ====
-
-
-
 
 // ==== Method Overview ====
 
@@ -93,5 +87,63 @@ Vector *vector_clone(Vector *this, type_methods *new_data_methods);
 Vector vector_slice(Vector *this, size_t offset, size_t count);
 
 // === End of Method Overview ===
+
+// ==== Macros ====
+
+#define VECTOR_FPRINTF(stream, vector, varname, ...)   \
+    do {                                               \
+        fprintf(stream, "[");                          \
+        if (vector_size(vector) > 0) {                 \
+            VectorNode *node = vector_begin(vector);   \
+            while (1) {                                \
+                varname = *_node;                      \
+                fprintf(stream, __VA_ARGS__);          \
+                if (_node == vector_end(vector) - 1) { \
+                    break;                             \
+                }                                      \
+                _node++;                               \
+                fprintf(stream, ", ");                 \
+            }                                          \
+        }                                              \
+        printf("]\n");                                 \
+    } while (0)
+
+#define VECTOR_SPRINTF(buffer, vector, varname, ...)           \
+    do {                                                       \
+        sprintf(buffer, "[");                                  \
+        if (vector_size(vector) > 0) {                         \
+            VectorNode *_node = vector_begin(vector);          \
+            while (1) {                                        \
+                varname = *_node;                              \
+                sprintf(buffer + strlen(buffer), __VA_ARGS__); \
+                if (_node == vector_end(vector) - 1) {         \
+                    break;                                     \
+                }                                              \
+                _node++;                                       \
+                sprintf(buffer + strlen(buffer), ", ");        \
+            }                                                  \
+        }                                                      \
+        sprintf(buffer + strlen(buffer), "]\n");               \
+    } while (0)
+
+#define VECTOR_PRINTF(vector, varname, ...)            \
+    do {                                               \
+        printf("[");                                   \
+        if (vector_size(vector) > 0) {                 \
+            VectorNode *_node = vector_begin(vector);  \
+            while (1) {                                \
+                varname = *_node;                      \
+                printf(__VA_ARGS__);                   \
+                if (_node == vector_end(vector) - 1) { \
+                    break;                             \
+                }                                      \
+                _node++;                               \
+                printf(", ");                          \
+            }                                          \
+        }                                              \
+        printf("]\n");                                 \
+    } while (0)
+
+// === End of Macros ====
 
 #endif
