@@ -222,7 +222,7 @@ void *treeset_minimum(TreeSet *this) {
     while (current_node->left != NULL) {
         current_node = current_node->child[LEFT];
     }
-    return this->data_methods->dup(current_node->data);
+    return current_node->data;
 }
 
 void *treeset_maximum(TreeSet *this) {
@@ -233,7 +233,7 @@ void *treeset_maximum(TreeSet *this) {
     while (current_node->right != NULL) {
         current_node = current_node->child[RIGHT];
     }
-    return this->data_methods->dup(current_node->data);
+    return current_node->data;
 }
 
 bool treeset_contains(TreeSet *this, void *data) {

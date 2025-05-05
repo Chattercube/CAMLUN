@@ -1,10 +1,10 @@
 
-#include "vector.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
 #include "typemethods.h"
+#include "vector.h"
 
 // ==== Method Overview ====
 
@@ -102,22 +102,22 @@ Vector *vector_create(type_methods *data_methods) {
 
 void vector_destroy(Vector *this) {
     for (size_t i = 0; i < this->size; i++) {
-        this->data_methods->del(this->nodes[i]);
+        USE_DEL(this->data_methods, this->nodes[i]);
     }
 }
 
 void *vector_get(Vector *this, size_t pos) {
-    return this->data_methods->dup(*(void **)vector_at(this, pos));
+    return *(void **)(this->nodes + pos);
 }
 
 void *vector_first(Vector *this) {
-    if (vector_empty(this)) return NULL;
-    return this->data_methods->dup(*(void **)vector_begin(this));
+    if (this->size == 0) return NULL;
+    return *(void **)(this->nodes);
 }
 
 void *vector_last(Vector *this) {
-    if (vector_empty(this)) return NULL;
-    return this->data_methods->dup(*(void **)(vector_end(this) - 1));
+    if (this->size == 0) return NULL;
+    return *(void **)(this->nodes + this->size - 1);
 }
 
 VectorNode *vector_at(Vector *this, size_t pos) {
@@ -188,8 +188,8 @@ void vector_compact(Vector *this) {
 // Note : vector_set assumes there is existing data at pos, use vector_node_init to initialize new nodes
 void vector_set(Vector *this, size_t pos, void *data) {
     assert(pos < this->size);
-    this->data_methods->del((void*)(this->nodes[pos]));
-    this->nodes[pos] = this->data_methods->dup(data);
+    USE_DEL(this->data_methods, (void*)(this->nodes[pos]));
+    this->nodes[pos] = USE_DUP(this->data_methods, data);
     return;
 }
 
@@ -210,7 +210,7 @@ void vector_insert(Vector *this, size_t pos, void *data) {
 
 void vector_erase(Vector *this, size_t pos) {
     assert(pos < this->size);
-    this->data_methods->del(this->nodes[pos]);
+    USE_DEL(this->data_methods, this->nodes[pos]);
 
     for (size_t i = pos; i < this->size - 1; i++) {
         this->nodes[i] = this->nodes[i + 1];
@@ -253,13 +253,13 @@ void vector_push_back(Vector *this, void *data) {
 void vector_pop_back(Vector *this) {
     assert(this->size > 0);
     this->size--;
-    this->data_methods->del(this->nodes[this->size]);
+    USE_DEL(this->data_methods, this->nodes[this->size]);
     this->nodes[this->size] = NULL;
 }
 
 void vector_truncate(Vector *this, size_t new_size) {
     for (size_t i = new_size; i < this->size; i++) {
-        this->data_methods->del(this->nodes[i]);
+        USE_DEL(this->data_methods, this->nodes[i]);
     }
     this->size = new_size;
 }
@@ -269,7 +269,7 @@ void vector_expand(Vector *this, size_t new_size) {
         vector_reserve(this, new_size);
     }
     for (size_t i = this->size; i < new_size; i++) {
-        this->nodes[i] = this->data_methods->crt();
+        this->nodes[i] = USE_CRT(this->data_methods);
     }
     this->size = new_size;
 }
@@ -284,7 +284,7 @@ void vector_resize(Vector *this, size_t new_size) {
 
 void vector_clear(Vector *this) {
     for (size_t i = 0; i < this->size; i++) {
-        this->data_methods->del(this->nodes[i]);
+        USE_DEL(this->data_methods, this->nodes[i]);
     }
     this->size = 0;
 }
@@ -296,7 +296,7 @@ Vector *vector_clone(Vector *this, type_methods *new_data_methods) {
     }
     vector_reserve(clone, this->size);
     for (size_t i = 0; i < this->size; i++) {
-        clone->nodes[i] = this->data_methods->dup(this->nodes[i]);
+        clone->nodes[i] = USE_DUP(this->data_methods, this->nodes[i]);
     }
     clone->size = this->size;
     return clone;

@@ -1,7 +1,8 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <assert.h>
 #include "hashmap.h"
+
+#include <assert.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 // ==== Method Overview ====
 
@@ -76,8 +77,8 @@ HashMap *hashmap_destroy(HashMap *map) {
     }
     for (size_t i = 0; i < map->capacity; i++) {
         if (map->nodes[i].status == HASHMAP_NODE_FILLED) {
-            map->key_methods->del(map->nodes[i].key);
-            map->value_methods->del(map->nodes[i].value);
+            USE_DEL(map->key_methods, map->nodes[i].key);
+            USE_DEL(map->value_methods, map->nodes[i].value);
         }
     }
     free(map->nodes);
@@ -86,11 +87,11 @@ HashMap *hashmap_destroy(HashMap *map) {
 }
 
 void *hashmap_get(HashMap *map, void *key) {
-    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
     size_t probe_count = 0;
     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
-        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
-            return map->value_methods->dup(map->nodes[index].value);
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
+            return map->nodes[index].value;
         }
         probe_count++;
         index = hashmap_probe_next(map, index, probe_count);
@@ -99,10 +100,10 @@ void *hashmap_get(HashMap *map, void *key) {
 }
 
 bool hashmap_contains(HashMap *map, void *key) {
-    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
     size_t probe_count = 0;
     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
-        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
             return true;
         }
         probe_count++;
@@ -112,10 +113,10 @@ bool hashmap_contains(HashMap *map, void *key) {
 }
 
 HashMapNode *hashmap_find(HashMap *map, void *key) {
-    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
     size_t probe_count = 0;
     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
-        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
             return map->nodes + index;
         }
         probe_count++;
@@ -125,25 +126,24 @@ HashMapNode *hashmap_find(HashMap *map, void *key) {
 }
 
 void hashmap_rehash(HashMap *map, size_t new_capacity) {
-
-    if(map->occupied_size == 0) {
+    if (map->occupied_size == 0) {
         map->capacity = new_capacity;
         return;
     }
 
     HashMapNode *new_nodes = calloc(new_capacity, sizeof(HashMapNode));
-    if(new_nodes == NULL) {
+    if (new_nodes == NULL) {
         return;
     }
 
     size_t new_size = 0;
-    for(size_t i = 0; i < map->capacity; i++) {
-        if(map->nodes[i].status != HASHMAP_NODE_FILLED) {
+    for (size_t i = 0; i < map->capacity; i++) {
+        if (map->nodes[i].status != HASHMAP_NODE_FILLED) {
             continue;
         }
-        size_t index = map->key_methods->hash(map->nodes[i].key) % new_capacity;
+        size_t index = USE_HASH(map->key_methods, map->nodes[i].key) % new_capacity;
         size_t probe_count = 0;
-        while(new_nodes[index].status == HASHMAP_NODE_FILLED) {
+        while (new_nodes[index].status == HASHMAP_NODE_FILLED) {
             probe_count++;
             index = hashmap_probe_next(map, index, probe_count);
         }
@@ -182,21 +182,21 @@ void hashmap_add(HashMap *map, void *key) {
         hashmap_rehash(map, map->capacity * 2);
     }
 
-    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
     size_t probe_count = 0;
     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
-        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
-            return; // Key already exists
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
+            return;  // Key already exists
         }
         probe_count++;
         index = hashmap_probe_next(map, index, probe_count);
     }
 
-    if(map->nodes[index].status == HASHMAP_NODE_FREE) {
+    if (map->nodes[index].status == HASHMAP_NODE_FREE) {
         map->occupied_size++;
     }
-    map->nodes[index].key = map->key_methods->dup(key);
-    map->nodes[index].value = map->value_methods->crt();
+    map->nodes[index].key = USE_DUP(map->key_methods, key);
+    map->nodes[index].value = USE_CRT(map->value_methods);
     map->nodes[index].status = HASHMAP_NODE_FILLED;
     map->size++;
 }
@@ -206,35 +206,35 @@ void hashmap_set(HashMap *map, void *key, void *value) {
         hashmap_rehash(map, map->capacity * 2);
     }
 
-    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
     size_t probe_count = 0;
     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
-        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
-            map->value_methods->del(map->nodes[index].value);
-            map->nodes[index].value = map->value_methods->dup(value);
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
+            USE_DEL(map->value_methods, map->nodes[index].value);
+            map->nodes[index].value = USE_DUP(map->value_methods, value);
             return;
         }
         probe_count++;
         index = hashmap_probe_next(map, index, probe_count);
     }
 
-    if(map->nodes[index].status == HASHMAP_NODE_FREE) {
+    if (map->nodes[index].status == HASHMAP_NODE_FREE) {
         map->occupied_size++;
     }
-    map->nodes[index].key = map->key_methods->dup(key);
-    map->nodes[index].value = map->value_methods->dup(value);
+    map->nodes[index].key = USE_DUP(map->key_methods, key);
+    map->nodes[index].value = USE_DUP(map->value_methods, value);
     map->nodes[index].status = HASHMAP_NODE_FILLED;
     map->size++;
     return;
 }
 
 void hashmap_reset(HashMap *map, void *key) {
-    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
     size_t probe_count = 0;
     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
-        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
-            map->value_methods->del(map->nodes[index].value);
-            map->nodes[index].value = map->value_methods->crt();
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
+            USE_DEL(map->value_methods, map->nodes[index].value);
+            map->nodes[index].value = USE_CRT(map->value_methods);
             return;
         }
         probe_count++;
@@ -243,12 +243,12 @@ void hashmap_reset(HashMap *map, void *key) {
 }
 
 void hashmap_remove(HashMap *map, void *key) {
-    size_t index = map->key_methods->hash(key) % map->capacity;
+    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
     size_t probe_count = 0;
     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
-        if (map->nodes[index].status == HASHMAP_NODE_FILLED && map->key_methods->cmp(map->nodes[index].key, key) == 0) {
-            map->key_methods->del(map->nodes[index].key);
-            map->value_methods->del(map->nodes[index].value);
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
+            USE_DEL(map->key_methods, map->nodes[index].key);
+            USE_DEL(map->value_methods, map->nodes[index].value);
             map->nodes[index].status = HASHMAP_NODE_DELETED;
             map->size--;
             return;
@@ -261,8 +261,8 @@ void hashmap_remove(HashMap *map, void *key) {
 void hashmap_clear(HashMap *map) {
     for (size_t i = 0; i < map->capacity; i++) {
         if (map->nodes[i].status == HASHMAP_NODE_FILLED) {
-            map->key_methods->del(map->nodes[i].key);
-            map->value_methods->del(map->nodes[i].value);
+            USE_DEL(map->key_methods, map->nodes[i].key);
+            USE_DEL(map->value_methods, map->nodes[i].value);
             map->nodes[i].status = HASHMAP_NODE_FREE;
         }
     }
