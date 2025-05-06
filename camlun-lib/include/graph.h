@@ -28,6 +28,19 @@ typedef struct GraphEdgeKey {
     GraphVertexNode *to;    // GraphVertexNode *
 } GraphEdgeKey;
 
+typedef struct GraphConnection {
+    void *from_id;
+    void *from_value;
+    void *to_id;
+    void *to_value;
+} GraphConnection;
+
+typedef struct GraphEdge {
+    void *from_id;
+    void *to_id;
+    void *edge_value;
+} GraphEdge;
+
 typedef struct Graph {
     type_methods *id_methods;
     type_methods *value_methods;
@@ -53,16 +66,17 @@ void graph_uninit_edges(Graph *this);
 
 // Access and iterate :
 
+void *graph_get_vertex_id(Graph *this, void *id);
 void *graph_get_vertex_value(Graph *this, void *id);
 void *graph_get_edge_value(Graph *this, void *from, void *to);
 
 bool graph_contains(Graph *this, void *id);
 bool graph_adjacent(Graph *this, void *from, void *to);
 
-GraphVertexNode *graph_find_node(Graph *this, void *id);
+// GraphVertexNode *graph_find_node(Graph *this, void *id);
 
-HashMap *graph_vertices(Graph *this);
-HashMap *graph_edges(Graph *this);
+// HashMap *graph_vertices(Graph *this);
+// HashMap *graph_edges(Graph *this);
 
 // Size and capacity :
 
@@ -129,15 +143,41 @@ void graph_clear_edges(Graph *this);
         });                                                                          \
     } while (0)
 
-#define GRAPH_CONNECTIONS_FOREACH(graph, fromnodename, tonodename, code)                   \
+#define GRAPH_CONNECTIONS_FOREACH(graph, connectionname, code)                             \
     do {                                                                                   \
         HASHMAP_VALUES_FOREACH((graph)->vertices, GraphVertexNode * _from_vertex, {        \
             LINKEDLIST_FOREACH(_from_vertex->out_gv_nodes, GraphVertexNode * _to_vertex, { \
-                fromnodename = _from_vertex;                                               \
-                tonodename = _to_vertex;                                                   \
+                connectionname = (GraphConnection){                                        \
+                    .from_id = _from_vertex->id,                                           \
+                    .from_value = _from_vertex->value,                                     \
+                    .to_id = _to_vertex->id,                                               \
+                    .to_value = _to_vertex->value};                                        \
                 code;                                                                      \
             });                                                                            \
         });                                                                                \
+    } while (0)
+
+#define GRAPH_VERTICES_FOREACH(graph, idname, valname, code)                   \
+    do {                                                                       \
+        HASHMAP_VALUES_FOREACH((graph)->vertices, GraphVertexNode * _vertex, { \
+            idname = _vertex->id;                                              \
+            valname = _vertex->value;                                          \
+            code;                                                              \
+        });                                                                    \
+    } while (0)
+
+#define GRAPH_EDGES_FOREACH(graph, edgename, code)                               \
+    do {                                                                         \
+        if ((graph)->edges == NULL) {                                            \
+            graph_init_edges(graph);                                             \
+        }                                                                        \
+        HASHMAP_PAIRS_FOREACH((graph)->edges, GraphEdgeKey * key, void *value, { \
+            edgename = (GraphEdge){                                              \
+                .from_id = key->from->id,                                        \
+                .to_id = key->to->id,                                            \
+                .edge_value = value};                                            \
+            code;                                                                \
+        });                                                                      \
     } while (0)
 
 #endif

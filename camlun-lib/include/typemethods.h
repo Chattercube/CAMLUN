@@ -277,10 +277,10 @@ size_t shallow_hash_function(void *ptr);
         .hash = base_type##_hash_function};
 
 #define BOXED_ARR(type, ...) (type[]){__VA_ARGS__}
-#define BOXED(type, data) (&(type)(data))
+#define BOXED(data) (&(__typeof__(data)){data})
 #define UNBOX(type, ptr) (*(type*)(ptr))
-#define RAW(data) ((void*)(data))
-#define LIT(type, data) ((type)(data)) // Intepret data as type
+#define RAW(data) ((union { __typeof__(data) _raw; void* p; }){ ._raw = (data) }).p
+#define LIT(type, ptr) (((union { type _raw; void* p; }){ .p = (ptr) })._raw)
 
 // vector_insert(my_vec, BOXED(int, 23), 2)
 // int my_var = UNBOX(int, vector_get(my_vec, 2))

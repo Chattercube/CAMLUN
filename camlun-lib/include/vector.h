@@ -81,6 +81,8 @@ void vector_expand(Vector *this, size_t new_size);
 void vector_resize(Vector *this, size_t new_size);
 void vector_clear(Vector *this);
 
+void vector_swap(Vector *this, size_t pos1, size_t pos2);
+
 // Copy constructors or creators :
 
 Vector *vector_clone(Vector *this, type_methods *new_data_methods);

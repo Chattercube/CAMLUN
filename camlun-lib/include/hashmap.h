@@ -52,9 +52,10 @@ HashMap *hashmap_destroy(HashMap *this);
 // Access and iteration :
 
 void *hashmap_get(HashMap *map, void *key);
+void *hashmap_get_key(HashMap *map, void *key);
 bool hashmap_contains(HashMap *map, void *key);
 
-HashMapNode *hashmap_find(HashMap *map, void *key);
+// HashMapNode *hashmap_find(HashMap *map, void *key);
 
 // Capacity :
 

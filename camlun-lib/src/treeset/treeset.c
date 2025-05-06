@@ -66,7 +66,7 @@ TreeSetNode *treeset_insert_helper(TreeSet *set, TreeSetNode *node, void *data) 
         return treesetnode_create(data, RED);
     }
 
-    bool dir = set->data_methods->cmp(data, node->data) > 0;
+    bool dir = USE_CMP(set->data_methods, data,  node->data) > 0;
     node->child[dir] = treeset_insert_helper(set, node->child[dir], data);
     return treesetnode_insert_fix_up(node, dir);
 
@@ -127,7 +127,7 @@ TreeSetNode *treeset_delete_helper(TreeSet *set, TreeSetNode *node, void *data, 
         *balanced = true;
         return NULL;
     }
-    if (set->data_methods->cmp(node->data, data) == 0) {
+    if (USE_CMP(set->data_methods, node->data,  data) == 0) {
         if (node->child[LEFT] == NULL || node->child[RIGHT] == NULL) {
             TreeSetNode *temp = NULL;
             if(node->child[LEFT]) {
@@ -147,22 +147,22 @@ TreeSetNode *treeset_delete_helper(TreeSet *set, TreeSetNode *node, void *data, 
             #if DEBUG
             fprintf(stderr, "Deleting node %p\n", node->data);
             #endif
-            set->data_methods->del(node->data);
+            USE_DEL(set->data_methods, node->data);
             treesetnode_destroy(node);
             return temp;
         } else {
             TreeSetNode *temp = treesetnode_get_max(node->child[LEFT]);
-            node->data = set->data_methods->dup(temp->data);
+            node->data = USE_DUP(set->data_methods, temp->data);
             data = temp->data;
         }
     }
-    bool dir = set->data_methods->cmp(data, node->data) > 0;
+    bool dir = USE_CMP(set->data_methods, data,  node->data) > 0;
     node->child[dir] = treeset_delete_helper(set, node->child[dir], data, balanced);
     return *balanced ? node : treesetnode_delete_fix_up(node, dir, balanced);
 }
 
 void treeset_insert(TreeSet *set, void *data) {
-    void *new_data = set->data_methods->dup(data);
+    void *new_data = USE_DUP(set->data_methods, data);
     set->root = treeset_insert_helper(set, set->root, new_data);
     set->root->color = BLACK;
 }
@@ -185,7 +185,7 @@ void treeset_destroy_helper(TreeSet *set, TreeSetNode *node) {
     if(node->child[RIGHT] != NULL) {
         treeset_destroy_helper(set, node->child[RIGHT]);
     }
-    set->data_methods->del(node->data);
+    USE_DEL(set->data_methods, node->data);
     treesetnode_destroy(node);
     return;
 }
@@ -239,7 +239,7 @@ void *treeset_maximum(TreeSet *this) {
 bool treeset_contains(TreeSet *this, void *data) {
     TreeSetNode *current_node = this->root;
     while (current_node != NULL) {
-        switch (this->data_methods->cmp(current_node->data, data)) {
+        switch (USE_CMP(this->data_methods, current_node->data,  data)) {
             case 0:
                 return true;
             case 1:
@@ -253,12 +253,12 @@ bool treeset_contains(TreeSet *this, void *data) {
     return false;
 }
 
-TreeSetNode *treeset_find(TreeSet *this, void *data) {
+void *treeset_get_key(TreeSet *this, void *data) {
     TreeSetNode *current_node = this->root;
     while (current_node != NULL) {
-        switch (this->data_methods->cmp(current_node->data, data)) {
+        switch (USE_CMP(this->data_methods, current_node->data,  data)) {
             case 0:
-                return current_node;
+                return current_node->data;
             case 1:
                 current_node = current_node->child[LEFT];
                 break;
@@ -270,6 +270,23 @@ TreeSetNode *treeset_find(TreeSet *this, void *data) {
     return NULL;
 }
 
+// TreeSetNode *treeset_find(TreeSet *this, void *data) {
+//     TreeSetNode *current_node = this->root;
+//     while (current_node != NULL) {
+//         switch (USE_CMP(this->data_methods, current_node->data,  data)) {
+//             case 0:
+//                 return current_node;
+//             case 1:
+//                 current_node = current_node->child[LEFT];
+//                 break;
+//             default:
+//                 current_node = current_node->child[RIGHT];
+//                 break;
+//         }
+//     }
+//     return NULL;
+// }
+
 inline bool treeset_empty(TreeSet *this) {
     return this->size == 0;
 }
@@ -280,7 +297,7 @@ inline size_t treeset_size(TreeSet *this) {
 
 void treeset_add(TreeSet *this, void *data) {
     if(treeset_contains(this, data)) return;
-    // void *new_data = this->data_methods->dup(data);
+    // void *new_data = USE_DUP(this->data_methods, data);
     if (data == NULL) {
         return;
     }
@@ -339,7 +356,7 @@ int treeset_compare(TreeSet *first, TreeSet *second) {
         endforeach:
         TREESET_FOREACH(second, void *data, {
             if(compare_element_index_counter == 0) {
-                return first->data_methods->cmp(compare_element, data);
+                return USE_CMP(first->data_methods, compare_element,  data);
             }
             compare_element_index_counter--;
         });

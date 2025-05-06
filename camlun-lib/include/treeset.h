@@ -72,7 +72,8 @@ void *treeset_maximum(TreeSet *this);
 
 bool treeset_contains(TreeSet *this, void *data);
 
-TreeSetNode *treeset_find(TreeSet *this, void *data);
+void *treeset_get_key(TreeSet *this, void *data);
+// TreeSetNode *treeset_find(TreeSet *this, void *data);
 
 // Size and capacity :
 

@@ -99,6 +99,19 @@ void *hashmap_get(HashMap *map, void *key) {
     return NULL;
 }
 
+void *hashmap_get_key(HashMap *map, void *key) {
+    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
+    size_t probe_count = 0;
+    while (map->nodes[index].status != HASHMAP_NODE_FREE) {
+        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
+            return map->nodes[index].key;
+        }
+        probe_count++;
+        index = hashmap_probe_next(map, index, probe_count);
+    }
+    return NULL;
+}
+
 bool hashmap_contains(HashMap *map, void *key) {
     size_t index = USE_HASH(map->key_methods, key) % map->capacity;
     size_t probe_count = 0;
@@ -112,18 +125,18 @@ bool hashmap_contains(HashMap *map, void *key) {
     return false;
 }
 
-HashMapNode *hashmap_find(HashMap *map, void *key) {
-    size_t index = USE_HASH(map->key_methods, key) % map->capacity;
-    size_t probe_count = 0;
-    while (map->nodes[index].status != HASHMAP_NODE_FREE) {
-        if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
-            return map->nodes + index;
-        }
-        probe_count++;
-        index = hashmap_probe_next(map, index, probe_count);
-    }
-    return NULL;
-}
+// HashMapNode *hashmap_find(HashMap *map, void *key) {
+//     size_t index = USE_HASH(map->key_methods, key) % map->capacity;
+//     size_t probe_count = 0;
+//     while (map->nodes[index].status != HASHMAP_NODE_FREE) {
+//         if (map->nodes[index].status == HASHMAP_NODE_FILLED && USE_CMP(map->key_methods, map->nodes[index].key, key) == 0) {
+//             return map->nodes + index;
+//         }
+//         probe_count++;
+//         index = hashmap_probe_next(map, index, probe_count);
+//     }
+//     return NULL;
+// }
 
 void hashmap_rehash(HashMap *map, size_t new_capacity) {
     if (map->occupied_size == 0) {

@@ -27,12 +27,12 @@
     }                                                                 \
                                                                       \
     static int struct_name##_comparator(void *first, void *second) {  \
-        struct_name *a = (struct_name *)first;                        \
-        struct_name *b = (struct_name *)second;                       \
+        struct_name *_first = (struct_name *)first;                        \
+        struct_name *_second = (struct_name *)second;                       \
         comparator_code                                               \
     }                                                                 \
                                                                       \
-    type_methods varname = {                                          \
+    varname = {                                                       \
         .crt = struct_name##_default_constructor,                     \
         .del = struct_name##_destructor,                              \
         .dup = struct_name##_copy_constructor,                        \

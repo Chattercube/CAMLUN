@@ -75,7 +75,7 @@ void vector_node_init(Vector *vector, VectorNode *node, void *data) {
     if (node == NULL) {
         return;
     }
-    *node = vector->data_methods->dup(data);
+    *node = USE_DUP(vector->data_methods, data);
     if (*node == NULL) {
         return;
     }
@@ -287,6 +287,13 @@ void vector_clear(Vector *this) {
         USE_DEL(this->data_methods, this->nodes[i]);
     }
     this->size = 0;
+}
+
+void vector_swap(Vector *this, size_t pos1, size_t pos2) {
+    assert(pos1 < this->size && pos2 < this->size);
+    VectorNode temp = this->nodes[pos1];
+    this->nodes[pos1] = this->nodes[pos2];
+    this->nodes[pos2] = temp;
 }
 
 Vector *vector_clone(Vector *this, type_methods *new_data_methods) {

@@ -65,13 +65,13 @@ static void graph_edges_vertex_remove(Graph *this, GraphVertexNode *node) {
     LinkedList *out_nodes = node->out_gv_nodes;
     LinkedList *in_nodes = node->in_gv_nodes;
 
-    LINKEDLIST_FOREACH(out_nodes, GraphVertexNode *out_node {
-        GraphEdgeKey key = {.from = node, .to = out_node};
+    LINKEDLIST_FOREACH(out_nodes, GraphVertexNode *out_node, {
+        GraphEdgeKey key = ((GraphEdgeKey){.from = node, .to = out_node});
         hashmap_remove(this->edges, &key);
     });
 
-    LINKEDLIST_FOREACH(in_nodes, GraphVertexNode *in_node {
-        GraphEdgeKey key = {.from = in_node, .to = node};
+    LINKEDLIST_FOREACH(in_nodes, GraphVertexNode *in_node, {
+        GraphEdgeKey key = ((GraphEdgeKey){.from = in_node, .to = node});
         hashmap_remove(this->edges, &key);
     });
     return;
@@ -82,7 +82,7 @@ static void graph_adjacency_lists_vertex_remove(Graph *this, GraphVertexNode *no
 
     LinkedList *out_nodes = node->out_gv_nodes;
 
-    LINKEDLIST_FOREACH(out_nodes, GraphVertexNode *out_node {
+    LINKEDLIST_FOREACH(out_nodes, GraphVertexNode *out_node, {
         graphvertexnode_remove_in_node(out_node, node);
     });
 
@@ -146,6 +146,14 @@ void graph_init_edges(Graph *this) {
             hashmap_add(this->edges, &key);
         });
     });
+}
+
+void *graph_get_vertex_id(Graph *this, void *id) {
+    GraphVertexNode *vertex_node = hashmap_get(this->vertices, id);
+    if (vertex_node == NULL) {
+        return NULL;
+    }
+    return vertex_node->id;
 }
 
 void *graph_get_vertex_value(Graph *this, void *id) {
@@ -215,7 +223,7 @@ void graph_add(Graph *this, void *id) {
         return;
     }
     hashmap_set(this->vertices, vertex_node->id, vertex_node);
-    void *key_ref = hashmap_find(this->vertices, id)->key;
+    void *key_ref = hashmap_get_key(this->vertices, id);
     vertex_node->id = key_ref; // vertex node has no ownership of id
     this->vertex_count++;
 }
