@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include "murmur3.h"
 
+
+
 void *numerical_default_constructor(size_t type_size) {
     return calloc(1, type_size);
 }
@@ -85,10 +87,10 @@ void string_destructor(void *ptr) {
 }
 
 void *string_copy_constructor(void *ptr) {
-    if (!ptr) return NULL;
-    char *new_ptr = malloc(strlen((char *)ptr) + 1);
-    strcpy(new_ptr, (char *)ptr);
-    return (void *)new_ptr;
+    char *dst = malloc(strlen (ptr) + 1);  // Space for length plus nul
+    if (dst == NULL) return NULL;          // No memory
+    strcpy(dst, ptr);                      // Copy the characters
+    return dst;                            // Return the new string
 }
 
 int string_comparator(void *first, void *second) {
@@ -105,7 +107,8 @@ int string_comparator(void *first, void *second) {
 
 size_t string_hash_function(void *ptr) {
     uint64_t hash_output[2];
-    MurmurHash3_x64_128(ptr, strlen((char*)ptr), HASH_SEED, hash_output);
+    int len = strlen((char *)ptr);
+    MurmurHash3_x64_128(ptr, len, HASH_SEED, hash_output);
     return (size_t)(hash_output[0] ^ hash_output[1]);
 }
 

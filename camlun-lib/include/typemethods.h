@@ -276,26 +276,27 @@ size_t shallow_hash_function(void *ptr);
         .cmp = _##base_type##_##custom_id##_comparator,                            \
         .hash = base_type##_hash_function};
 
-#define BOXED_ARR(type, ...) (type[]){__VA_ARGS__}
+#define BOXED_ARR(type, ...) \
+    (type[]) { __VA_ARGS__ }
 #define BOXED(data) (&(__typeof__(data)){data})
-#define UNBOX(type, ptr) (*(type*)(ptr))
-#define RAW(data) ((union { __typeof__(data) _raw; void* p; }){ ._raw = (data) }).p
-#define LIT(type, ptr) (((union { type _raw; void* p; }){ .p = (ptr) })._raw)
+#define UNBOX(type, ptr) (*(type *)(ptr))
+#define RAW(data) ((union { __typeof__(data) _raw; void* p; }){._raw = (data)}).p
+#define LIT(type, ptr) (((union { type _raw; void* p; }){.p = (ptr)})._raw)
 
 // vector_insert(my_vec, BOXED(int, 23), 2)
 // int my_var = UNBOX(int, vector_get(my_vec, 2))
 
-// Fallback to 
+// Fallback to
 #define USE_CRT(type_methods_ptr) \
     ((type_methods_ptr) && (type_methods_ptr)->crt ? (type_methods_ptr)->crt() : NULL)
 
 // Use the destructor or fallback to shallow_destructor
-#define USE_DEL(type_methods_ptr, ptr) \
-    do { \
+#define USE_DEL(type_methods_ptr, ptr)                       \
+    do {                                                     \
         if ((type_methods_ptr) && (type_methods_ptr)->del) { \
-            (type_methods_ptr)->del(ptr); \
-        } \
-    } while (0) \
+            (type_methods_ptr)->del(ptr);                    \
+        }                                                    \
+    } while (0)
 
 // Use the copy constructor or fallback to shallow_copy_constructor
 #define USE_DUP(type_methods_ptr, ptr) \
@@ -303,10 +304,57 @@ size_t shallow_hash_function(void *ptr);
 
 // Use the comparator or fallback to shallow_comparator
 #define USE_CMP(type_methods_ptr, first, second) \
-    ((type_methods_ptr) && (type_methods_ptr)->cmp ? (type_methods_ptr)->cmp(first, second) : (first > second) - (first < second) )
+    ((type_methods_ptr) && (type_methods_ptr)->cmp ? (type_methods_ptr)->cmp(first, second) : (first > second) - (first < second))
 
 // Use the hash function or fallback to shallow_hash_function
 #define USE_HASH(type_methods_ptr, ptr) \
     ((type_methods_ptr) && (type_methods_ptr)->hash ? (type_methods_ptr)->hash(ptr) : numerical_hash_function(sizeof(void *), ptr))
 
+#define DEFINE_DEFAULT_CONSTRUCTOR(type_name, type, code) \
+    static void *type_name##_default_constructor(void) {  \
+        do {                                              \
+            code;                                         \
+        } while (0);                                      \
+        return calloc(1, sizeof(type));                   \
+    }
+
+#define DEFINE_DESTRUCTOR(type_name, type, code)    \
+    static void type_name##_destructor(void *ptr) { \
+        do {                                        \
+            code;                                   \
+        } while (0);                                \
+        if (ptr) free(ptr);                          \
+    }
+
+#define DEFINE_COPY_CONSTRUCTOR(type_name, type, code)             \
+    static void *type_name##_copy_constructor(void *ptr) {         \
+        do {                                                       \
+            code;                                                  \
+        } while (0);                                               \
+        return memcpy(calloc(1, sizeof(type)), ptr, sizeof(type)); \
+    }
+
+#define DEFINE_COMPARATOR(type_name, type, code)                   \
+    static int type_name##_comparator(void *first, void *second) { \
+        type *_first = (type *)first;                              \
+        type *_second = (type *)second;                            \
+        do {                                                       \
+            code;                                                  \
+        } while (0);                                               \
+        return memcmp(first, second, sizeof(type));                \
+    }
+
+#define DEFINE_HASH_FUNCTION(type_name, type, code)        \
+    static size_t type_name##_hash_function(void *ptr) {   \
+        do {                                               \
+            code;                                          \
+        } while (0);                                       \
+        return numerical_hash_function(sizeof(type), ptr); \
+    }
+
+#define NUMERICAL_COMPARE(type, first, second) \
+    (*(type *)(first) > *(type *)(second)) - (*(type *)(first) < *(type *)(second))
+
+#define VALUE_COMPARE(type, first, second) \
+    ((type)(first) > (type)(second)) - ((type)(first) < (type)(second))
 #endif

@@ -104,6 +104,8 @@ void vector_destroy(Vector *this) {
     for (size_t i = 0; i < this->size; i++) {
         USE_DEL(this->data_methods, this->nodes[i]);
     }
+    free(this->nodes);
+    free(this);
 }
 
 void *vector_get(Vector *this, size_t pos) {

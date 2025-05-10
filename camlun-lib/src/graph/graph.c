@@ -140,6 +140,7 @@ void graph_init_edges(Graph *this) {
     this->edges = hashmap_create(&TYPE_GRAPHEDGEKEY, this->value_methods);
     HASHMAP_VALUES_FOREACH(this->vertices, GraphVertexNode * from_vertex, {
         LINKEDLIST_FOREACH(from_vertex->out_gv_nodes, GraphVertexNode *to_vertex, {
+            // printf("Adding edge from %s to %s\n", from_vertex->id, to_vertex->id);
             GraphEdgeKey key;
             key.from = from_vertex;
             key.to = to_vertex;
@@ -169,7 +170,9 @@ void *graph_get_edge_value(Graph *this, void *from, void *to) {
         graph_init_edges(this);
     }
 
-    GraphEdgeKey key = {.from = from, .to = to};
+    GraphEdgeKey key;
+    key.from = hashmap_get(this->vertices, from);
+    key.to = hashmap_get(this->vertices, to);
     return hashmap_get(this->edges, &key);
 }
 
@@ -218,11 +221,11 @@ bool graph_adjacent(Graph *this, void *from, void *to) {
 
 void graph_add(Graph *this, void *id) {
     GraphVertexNode *vertex_node = graphvertexnode_create(this);
-    if (vertex_node == NULL) {
-        graphvertexnode_destroy(this, vertex_node);
-        return;
-    }
-    hashmap_set(this->vertices, vertex_node->id, vertex_node);
+    // if (vertex_node == NULL) {
+    //     graphvertexnode_destroy(this, vertex_node);
+    //     return;
+    // }
+    hashmap_set(this->vertices, id, vertex_node);
     void *key_ref = hashmap_get_key(this->vertices, id);
     vertex_node->id = key_ref; // vertex node has no ownership of id
     this->vertex_count++;
@@ -266,12 +269,15 @@ void graph_reset(Graph *this, void *id) {
 }
 
 void graph_connect(Graph *this, void *from, void *to) {
+    #if DEBUG
+    // printf("Connecting %s to %s\n", from, to);
+    #endif
     assert(hashmap_contains(this->vertices, from));
     assert(hashmap_contains(this->vertices, to));
     GraphVertexNode *from_vertex = hashmap_get(this->vertices, from);
-    linkedlist_push_front(from_vertex->out_gv_nodes, to);
-
     GraphVertexNode *to_vertex = hashmap_get(this->vertices, to);
+
+    linkedlist_push_front(from_vertex->out_gv_nodes, to_vertex);
     linkedlist_push_front(to_vertex->in_gv_nodes, from_vertex);
 
     if(this->edges != NULL) {

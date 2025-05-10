@@ -47,7 +47,7 @@ typedef struct HashMap {
 // Constructors and destructors :
 
 HashMap *hashmap_create(type_methods *key_methods, type_methods *value_methods);
-HashMap *hashmap_destroy(HashMap *this);
+void hashmap_destroy(HashMap *this);
 
 // Access and iteration :
 

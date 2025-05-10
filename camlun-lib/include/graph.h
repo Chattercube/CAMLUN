@@ -147,11 +147,11 @@ void graph_clear_edges(Graph *this);
     do {                                                                                   \
         HASHMAP_VALUES_FOREACH((graph)->vertices, GraphVertexNode * _from_vertex, {        \
             LINKEDLIST_FOREACH(_from_vertex->out_gv_nodes, GraphVertexNode * _to_vertex, { \
-                connectionname = (GraphConnection){                                        \
-                    .from_id = _from_vertex->id,                                           \
-                    .from_value = _from_vertex->value,                                     \
-                    .to_id = _to_vertex->id,                                               \
-                    .to_value = _to_vertex->value};                                        \
+                GraphConnection connectionname;                                                        \
+                connectionname.from_id = _from_vertex->id;                                             \
+                connectionname.from_value = _from_vertex->value;                                       \
+                connectionname.to_id = _to_vertex->id;                                                 \
+                connectionname.to_value = _to_vertex->value;                                           \
                 code;                                                                      \
             });                                                                            \
         });                                                                                \

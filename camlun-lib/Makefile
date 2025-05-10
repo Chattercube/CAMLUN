@@ -34,7 +34,7 @@ release: CFLAGS += -O2
 release: $(STATIC_LIB) $(SHARED_LIB)
 
 # Debug build
-debug: CFLAGS += -g -DDEBUG
+debug: CFLAGS += -g3 -DDEBUG -O0
 debug: $(DEBUG_STATIC_LIB) $(DEBUG_SHARED_LIB) debug_tests
 
 # Build static library

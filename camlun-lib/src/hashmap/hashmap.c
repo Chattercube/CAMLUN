@@ -8,13 +8,13 @@
 
 // Private Methods :
 
-size_t hashmap_probe_next(HashMap *map, size_t index, size_t probe_count);
+size_t hashmap_probe_next(size_t capacity, size_t index, size_t probe_count);
 bool hashmap_need_rehash(HashMap *map, size_t new_size);
 
 // Constructors and destructors :
 
 HashMap *hashmap_create(type_methods *key_methods, type_methods *value_methods);
-HashMap *hashmap_destroy(HashMap *this);
+void hashmap_destroy(HashMap *this);
 
 // Access and iteration :
 
@@ -42,8 +42,8 @@ void hashmap_remove(HashMap *map, void *key);
 
 // Private methods
 
-size_t hashmap_probe_next(HashMap *map, size_t index, size_t probe_count) {
-    return (index + probe_count * probe_count) % map->capacity;
+size_t hashmap_probe_next(size_t capacity, size_t index, size_t probe_count) {
+    return (index + probe_count * probe_count) % capacity;
 }
 
 bool hashmap_need_rehash(HashMap *map, size_t new_size) {
@@ -71,19 +71,22 @@ HashMap *hashmap_create(type_methods *key_methods, type_methods *value_methods) 
     return hashmap;
 }
 
-HashMap *hashmap_destroy(HashMap *map) {
+void hashmap_destroy(HashMap *map) {
     if (map == NULL) {
-        return NULL;
+        return;
     }
     for (size_t i = 0; i < map->capacity; i++) {
         if (map->nodes[i].status == HASHMAP_NODE_FILLED) {
+            #if DEBUG
+            printf("Destroying %s\n", map->nodes[i].key);
+            #endif
             USE_DEL(map->key_methods, map->nodes[i].key);
             USE_DEL(map->value_methods, map->nodes[i].value);
         }
     }
     free(map->nodes);
     free(map);
-    return NULL;
+    return;
 }
 
 void *hashmap_get(HashMap *map, void *key) {
@@ -94,7 +97,7 @@ void *hashmap_get(HashMap *map, void *key) {
             return map->nodes[index].value;
         }
         probe_count++;
-        index = hashmap_probe_next(map, index, probe_count);
+        index = hashmap_probe_next(map->capacity, index, probe_count);
     }
     return NULL;
 }
@@ -107,7 +110,7 @@ void *hashmap_get_key(HashMap *map, void *key) {
             return map->nodes[index].key;
         }
         probe_count++;
-        index = hashmap_probe_next(map, index, probe_count);
+        index = hashmap_probe_next(map->capacity, index, probe_count);
     }
     return NULL;
 }
@@ -120,7 +123,7 @@ bool hashmap_contains(HashMap *map, void *key) {
             return true;
         }
         probe_count++;
-        index = hashmap_probe_next(map, index, probe_count);
+        index = hashmap_probe_next(map->capacity, index, probe_count);
     }
     return false;
 }
@@ -139,10 +142,10 @@ bool hashmap_contains(HashMap *map, void *key) {
 // }
 
 void hashmap_rehash(HashMap *map, size_t new_capacity) {
-    if (map->occupied_size == 0) {
-        map->capacity = new_capacity;
-        return;
-    }
+    // if (map->occupied_size == 0) {
+    //     map->capacity = new_capacity;
+    //     return;
+    // }
 
     HashMapNode *new_nodes = calloc(new_capacity, sizeof(HashMapNode));
     if (new_nodes == NULL) {
@@ -150,6 +153,10 @@ void hashmap_rehash(HashMap *map, size_t new_capacity) {
     }
 
     size_t new_size = 0;
+    
+    #if DEBUG
+    // printf("Old size %lu\n",  map->size);
+    #endif
     for (size_t i = 0; i < map->capacity; i++) {
         if (map->nodes[i].status != HASHMAP_NODE_FILLED) {
             continue;
@@ -158,7 +165,7 @@ void hashmap_rehash(HashMap *map, size_t new_capacity) {
         size_t probe_count = 0;
         while (new_nodes[index].status == HASHMAP_NODE_FILLED) {
             probe_count++;
-            index = hashmap_probe_next(map, index, probe_count);
+            index = hashmap_probe_next(new_capacity, index, probe_count);
         }
         new_nodes[index].key = map->nodes[i].key;
         new_nodes[index].value = map->nodes[i].value;
@@ -167,10 +174,15 @@ void hashmap_rehash(HashMap *map, size_t new_capacity) {
     }
 
     free(map->nodes);
-    map->nodes = new_nodes;
     map->capacity = new_capacity;
+    map->nodes = new_nodes;
     map->occupied_size = new_size;
     map->size = new_size;
+    #if DEBUG
+    // printf("New size %lu\n",  map->size);
+    // HASHMAP_PRINTF(map, char *key, void *value, "%s", key); printf("\n");
+    #endif
+    
     return;
 }
 
@@ -202,7 +214,7 @@ void hashmap_add(HashMap *map, void *key) {
             return;  // Key already exists
         }
         probe_count++;
-        index = hashmap_probe_next(map, index, probe_count);
+        index = hashmap_probe_next(map->capacity, index, probe_count);
     }
 
     if (map->nodes[index].status == HASHMAP_NODE_FREE) {
@@ -228,13 +240,17 @@ void hashmap_set(HashMap *map, void *key, void *value) {
             return;
         }
         probe_count++;
-        index = hashmap_probe_next(map, index, probe_count);
+        index = hashmap_probe_next(map->capacity, index, probe_count);
     }
 
     if (map->nodes[index].status == HASHMAP_NODE_FREE) {
         map->occupied_size++;
     }
-    map->nodes[index].key = USE_DUP(map->key_methods, key);
+
+    void *duplicated_key = USE_DUP(map->key_methods, key);
+    fprintf(stderr, "Duplicating key %p %p\n", key, duplicated_key);
+    map->nodes[index].key = duplicated_key;
+    // map->nodes[index].key = map->key_methods->dup(key);
     map->nodes[index].value = USE_DUP(map->value_methods, value);
     map->nodes[index].status = HASHMAP_NODE_FILLED;
     map->size++;
@@ -251,7 +267,7 @@ void hashmap_reset(HashMap *map, void *key) {
             return;
         }
         probe_count++;
-        index = hashmap_probe_next(map, index, probe_count);
+        index = hashmap_probe_next(map->capacity, index, probe_count);
     }
 }
 
@@ -267,7 +283,7 @@ void hashmap_remove(HashMap *map, void *key) {
             return;
         }
         probe_count++;
-        index = hashmap_probe_next(map, index, probe_count);
+        index = hashmap_probe_next(map->capacity, index, probe_count);
     }
 }
 
