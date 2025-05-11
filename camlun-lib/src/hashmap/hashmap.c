@@ -78,7 +78,7 @@ void hashmap_destroy(HashMap *map) {
     for (size_t i = 0; i < map->capacity; i++) {
         if (map->nodes[i].status == HASHMAP_NODE_FILLED) {
             #if DEBUG
-            printf("Destroying %s\n", map->nodes[i].key);
+            // printf("Destroying %s\n", map->nodes[i].key);
             #endif
             USE_DEL(map->key_methods, map->nodes[i].key);
             USE_DEL(map->value_methods, map->nodes[i].value);
@@ -248,7 +248,7 @@ void hashmap_set(HashMap *map, void *key, void *value) {
     }
 
     void *duplicated_key = USE_DUP(map->key_methods, key);
-    fprintf(stderr, "Duplicating key %p %p\n", key, duplicated_key);
+    // fprintf(stderr, "Duplicating key %p %p\n", key, duplicated_key);
     map->nodes[index].key = duplicated_key;
     // map->nodes[index].key = map->key_methods->dup(key);
     map->nodes[index].value = USE_DUP(map->value_methods, value);

@@ -52,7 +52,7 @@ static Graph *load_graph_from_file(FILE *file) {
                 break;
             }
             #if DEBUG
-            printf("Adding vertex %s\n", id);
+            // printf("Adding vertex %s\n", id);
             #endif
             graph_set(graph, id, &(NodeValue){.x = x, .y = y});
         } else if (strcmp(cmd_str, "link") == 0) {
@@ -113,8 +113,15 @@ static void calculate_edge_values(Graph *graph) {
 static Vector *find_path_by_astar(Graph *graph, char *from, char *to, heuristic_function heur_fn) {
     // Initalize Open Lis
 
-    assert(graph_contains(graph, from));
-    assert(graph_contains(graph, to));
+    if(!graph_contains(graph, from)) {
+        printf("Graph does not contain %s\n", from);
+        return NULL;
+    }
+
+    if(!graph_contains(graph, to)) {
+        printf("Graph does not contain %s\n", to);
+        return NULL;
+    }
 
     Vector *frontier = vector_create(&TYPE_PQNODE);
     HashMap *came_from = hashmap_create(&TYPE_STRING, &TYPE_STRING);
@@ -136,7 +143,7 @@ static Vector *find_path_by_astar(Graph *graph, char *from, char *to, heuristic_
         char *neighbour;
         GRAPH_OUT_ID_FOREACH(graph, current_id, neighbour, {
             assert(graph_contains(graph, neighbour));
-            printf("Checking %s -> %s\n", current_id, neighbour);
+            // printf("Checking %s -> %s\n", current_id, neighbour);
             double new_cost = *(double *)hashmap_get(cost_so_far, current_id) + *(double *)graph_get_edge_value(graph, current_id, neighbour);
             if( !hashmap_contains(cost_so_far, neighbour) || new_cost < *(double *)hashmap_get(cost_so_far, neighbour)) {
                 hashmap_set(cost_so_far, neighbour, &(double){new_cost});
@@ -163,8 +170,8 @@ static Vector *find_path_by_astar(Graph *graph, char *from, char *to, heuristic_
     
     #if DEBUG
     // printf("New size %lu\n",  map->size);
-    HASHMAP_PRINTF(came_from, char *key, void *value, "%p", key); printf("\n");
-    HASHMAP_PRINTF(cost_so_far, char *key, void *value, "%p", key); printf("\n");
+    // HASHMAP_PRINTF(came_from, char *key, void *value, "%p", key); printf("\n");
+    // HASHMAP_PRINTF(cost_so_far, char *key, void *value, "%p", key); printf("\n");
     #endif
     hashmap_destroy(cost_so_far);
     vector_destroy(frontier);
@@ -218,6 +225,11 @@ int main(int argc, char **argv) {
 
     clock_t start_time = clock();
     Vector *path = find_path_by_astar(graph, from_id, to_id, heur_fn);
+    if(path == NULL){
+        printf("Path not found\n");
+        graph_destroy(graph);
+        return 1;
+    }
     //return;
     clock_t end_time = clock();
 
